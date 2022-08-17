@@ -1,4 +1,5 @@
 require "dragonfly/hash_with_css_style_keys"
+require "dragonfly/image_magick/commands" if File.exist?("dragonfly/image_magick/commands.rb")
 
 module AvatarMagick
   module Generators
@@ -36,13 +37,21 @@ module AvatarMagick
         args.push("-background #{background}")
         args.push("label:#{text}")
 
-        content.generate!(:convert, args.join(' '), format)
+        if defined?(Dragonfly::ImageMagick::Commands)
+          Dragonfly::ImageMagick::Commands.generate(content, args.join(' '), format)
+        else
+          content.generate!(:convert, args.join(' '), format)
+        end
 
         args.clear
         args.push("-gravity center")
         args.push("-extent #{w}x#{h}")
 
-        content.process!(:convert, args.join(' '))
+        if defined?(Dragonfly::ImageMagick::Commands)
+          Dragonfly::ImageMagick::Commands.convert(content, args.join(' '))
+        else
+          content.process!(:convert, args.join(' '))
+        end
 
         content.add_meta('format' => format, 'name' => "avatar.#{format}")
       end
